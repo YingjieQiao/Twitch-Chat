@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  server1:
+    build:
+      dockerfile: Dockerfile
+      context: .
+      args:
+        PORT: 8081
+    links:
+      - server2
+    ports:
+      - 8081:8081
+    networks:
+      - localnetwork
+
+  server2:
+    build:
+      dockerfile: Dockerfile
+      context: .
+      args:
+        PORT: 8082
+    ports:
+      - 8082:8082
+    networks:
+      - localnetwork
+
+networks:
+  localnetwork:
+    driver: bridge
