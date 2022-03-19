@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   server1:
@@ -7,10 +7,8 @@ services:
       context: .
       args:
         PORT: 8081
-    links:
-      - server2
     ports:
-      - 8081:8081
+      - "8081:8081"
     networks:
       - localnetwork
 
@@ -21,7 +19,18 @@ services:
       args:
         PORT: 8082
     ports:
-      - 8082:8082
+      - "8082:8082"
+    networks:
+      - localnetwork
+
+  server3:
+    build:
+      dockerfile: Dockerfile
+      context: .
+      args:
+        PORT: 8083
+    ports:
+      - "8083:8083"
     networks:
       - localnetwork
 
