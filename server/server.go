@@ -1,14 +1,17 @@
 package main
 
 import (
-	"fmt"
 	"github.com/go-chi/chi/v5"
-	"log"
+	"go.uber.org/zap"
 	"net/http"
 	"os"
 )
 
 func main() {
+	// initialise logging
+	log, _ := zap.NewProduction()
+	defer log.Sync()
+
 	// initialise server port
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -18,11 +21,17 @@ func main() {
 	// initialise router
 	r := chi.NewRouter()
 
+	// initialise DB
+	db := NewStore()
+
 	// initialise routes
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("welcome"))
+		GetKeyValue(w, r, db, log)
+	})
+	r.Post("/", func(w http.ResponseWriter, r *http.Request) {
+		UpdateKeyValue(w, r, db, log)
 	})
 
-	fmt.Printf("Running on port [%s]", port)
-	log.Fatal(http.ListenAndServe(":"+port, r))
+	log.Info("Starting server", zap.String("port", port))
+	log.Error(http.ListenAndServe(":"+port, r).Error())
 }
