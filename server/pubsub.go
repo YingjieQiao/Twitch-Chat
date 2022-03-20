@@ -71,6 +71,7 @@ func UpdateKeyValue(w http.ResponseWriter, r *http.Request, db *Store, log *zap.
 		data := Request{
 			Key:   req.Key,
 			Value: req.Value,
+			Clock: req.Clock,
 		}
 		jsonData, _ := json.Marshal(data)
 
