@@ -48,12 +48,12 @@ func UpdateKeyValue(w http.ResponseWriter, r *http.Request, db *Store, log *zap.
 		json.NewEncoder(w).Encode(err)
 		return
 	}
-	fmt.Printf("key [%s] value: [%s]", req.Key, req.Value)
 	db.Put(req.Key, req.Value)
 
 	header := r.Header.Get("isBroadcast")
-	client := &http.Client{}
 	if header == "1" {
+		client := &http.Client{}
+
 		// boardcast to other servers
 		jsonFile, err := os.Open("serverConfig.json")
 		// if we os.Open returns an error then handle it
