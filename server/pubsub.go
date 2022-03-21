@@ -32,6 +32,7 @@ func GetKeyValue(w http.ResponseWriter, r *http.Request, db *Store, log *zap.Log
 	}
 
 	value := db.Get(keys[0])
+	log.Info("Getting key-value pair:", zap.String("key", keys[0]), zap.String("value", value))
 	json.NewEncoder(w).Encode(Result{Key: keys[0], Value: value})
 }
 
@@ -52,55 +53,59 @@ func UpdateKeyValue(w http.ResponseWriter, r *http.Request, db *Store, log *zap.
 
 	header := r.Header.Get("isBroadcast")
 	if header == "1" {
-		client := &http.Client{}
-
-		// boardcast to other servers
-		jsonFile, err := os.Open("serverConfig.json")
-		// if we os.Open returns an error then handle it
-		if err != nil {
-			log.Error("Error in parsing json config file", zap.String("message", err.Error()))
-		}
-		defer jsonFile.Close()
-
-		byteValue, _ := ioutil.ReadAll(jsonFile)
-
-		var servers Servers
-		json.Unmarshal([]byte(byteValue), &servers)
-
-		// build json request body
-		data := Request{
-			Key:   req.Key,
-			Value: req.Value,
-		}
-		jsonData, _ := json.Marshal(data)
-
-		if err != nil {
-			log.Error("Error in creating request body", zap.String("message", err.Error()))
-		}
-
-		for i := 0; i < len(servers.Servers); i++ {
-			targetPort := servers.Servers[i].Port
-			currPort := os.Getenv("PORT")
-			if currPort == targetPort {
-				continue
-			}
-
-			log.Info("Updating server", zap.String("port", targetPort))
-			endpoint := fmt.Sprintf("http://host.docker.internal:%s/", targetPort)
-			broadcastRequest, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonData))
-			//_, err := http.Post(endpoint, "application/json", bytes.NewBuffer(jsonData))
-			broadcastRequest.Header.Add("isBroadcast", "0")
-			broadcastRequest.Header.Add("Content-Type", "application/json")
-			if err != nil {
-				log.Error("Request Failed", zap.String("message", err.Error()))
-				return
-			}
-			resp, _ := client.Do(broadcastRequest)
-			bodyBytes, _ := io.ReadAll(resp.Body)
-			bodyString := string(bodyBytes)
-			log.Info("Update server status", zap.String("response body", bodyString))
-		}
+		go broadcast(req, log)
 	}
 
 	json.NewEncoder(w).Encode(req)
+}
+
+// go routine to broadcast POST request to other servers
+func broadcast(req Request, log *zap.Logger) {
+	client := &http.Client{}
+
+	// boardcast to other servers
+	jsonFile, err := os.Open("serverConfig.json")
+	if err != nil {
+		log.Error("Error in parsing json config file", zap.String("message", err.Error()))
+	}
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	var servers Servers
+	json.Unmarshal([]byte(byteValue), &servers)
+
+	// build json request body
+	data := Request{
+		Key:   req.Key,
+		Value: req.Value,
+	}
+	jsonData, _ := json.Marshal(data)
+
+	if err != nil {
+		log.Error("Error in creating request body", zap.String("message", err.Error()))
+	}
+
+	for i := 0; i < len(servers.Servers); i++ {
+		targetPort := servers.Servers[i].Port
+		currPort := os.Getenv("PORT")
+		if currPort == targetPort {
+			continue
+		}
+
+		log.Info("Updating server", zap.String("port", targetPort))
+		endpoint := fmt.Sprintf("http://host.docker.internal:%s/", targetPort)
+		broadcastRequest, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonData))
+		//_, err := http.Post(endpoint, "application/json", bytes.NewBuffer(jsonData))
+		broadcastRequest.Header.Add("isBroadcast", "0")
+		broadcastRequest.Header.Add("Content-Type", "application/json")
+		if err != nil {
+			log.Error("Request Failed", zap.String("message", err.Error()))
+			return
+		}
+		resp, _ := client.Do(broadcastRequest)
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		bodyString := string(bodyBytes)
+		log.Info("Update server status", zap.String("response body", bodyString))
+	}
 }
