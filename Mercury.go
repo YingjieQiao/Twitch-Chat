@@ -10,7 +10,9 @@ import (
 )
 
 func main() {
-	os.Setenv("PORT", "1234")
+	if os.Getenv("PORT") == "" {
+		os.Setenv("PORT", "1234")
+	}
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 
 	// create server
