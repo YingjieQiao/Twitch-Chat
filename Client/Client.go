@@ -13,7 +13,7 @@ type PushEvent struct {
 }
 
 func main() {
-	client, err := rpc.DialHTTP("tcp", ":1234") // connect to the node
+	client, err := rpc.DialHTTP("tcp", ":8081") // connect to the node
 	if err != nil {
 		log.Fatal("Dialing:", err)
 	}
