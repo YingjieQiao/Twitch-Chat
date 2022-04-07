@@ -19,7 +19,7 @@ func main() {
 	port, _ := strconv.ParseInt(args[0], 10, 64)
 
 	// create server
-	server := CreateServer(int(port))
+	server := CreateServer(uint64(port))
 	rpc.Register(server)
 	rpc.HandleHTTP()
 

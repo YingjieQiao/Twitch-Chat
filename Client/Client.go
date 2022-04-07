@@ -8,8 +8,12 @@ import (
 )
 
 type PushEvent struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
+	Key   string 
+	Value string 
+}
+
+type ClientGetResp struct{
+	values []string
 }
 
 func main() {
@@ -19,7 +23,7 @@ func main() {
 	}
 
 	var reply bool
-	var reply2 string
+	reply2 := ClientGetResp{}
 
 	args, err := json.Marshal(PushEvent{Key: "Hello", Value: "There"})
 	if err != nil {
