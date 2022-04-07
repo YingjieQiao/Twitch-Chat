@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+
 	"fmt"
 	"log"
 	"net/rpc"
@@ -11,9 +11,12 @@ type PushEvent struct {
 	Key   string 
 	Value string 
 }
+type ClientPushResp struct{
+	Success []bool
+}
 
 type ClientGetResp struct{
-	values []string
+	Values []string
 }
 
 func main() {
@@ -22,15 +25,13 @@ func main() {
 		log.Fatal("Dialing:", err)
 	}
 
-	var reply bool
+	reply  :=  ClientPushResp{}
 	reply2 := ClientGetResp{}
 
-	args, err := json.Marshal(PushEvent{Key: "Hello", Value: "There"})
-	if err != nil {
-		log.Fatal("JSON error:", err)
-	}
+	args := PushEvent{"Hello", "There"}
 
-	err = client.Call("Server.PushValue", args, &reply)
+
+	err = client.Call("Server.PushValue", &args, &reply)
 	if err != nil {
 		log.Fatal("RPC error:", err)
 	}

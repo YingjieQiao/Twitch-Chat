@@ -30,7 +30,6 @@ func NewManager(port uint64, numOfvNodesPerpNodes int, liveDuration time.Duratio
 }
 
 func (m *Manager) doUpdateNode(inComingNodeInfo NodeInfo) {
-	m.portToInfo[inComingNodeInfo.Port] = inComingNodeInfo
 
 	currAlive := false
 	if prev, ok := m.portToInfo[inComingNodeInfo.Port]; ok {

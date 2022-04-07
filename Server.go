@@ -14,9 +14,8 @@ func CreateServer(port uint64) *Server {
 		nodeManager: NewManager(port, 5, 5*time.Second),  //Peiyuan: Default: 5 virtual node per physical node. 5 seconds before expire
 		selfPort: port, 
 		numReplica: 3, //Peiyuan: Default: replicate on 5 nodes
-		nodeSet: []uint64{8081, 8082,8083,8084,8085,8086,8087}, //Peiyuan: defualt node map
+		nodeSet: []uint64{8081, 8082,8083, 8084, 8085,}, //Peiyuan: defualt node map
 	}
-	
 	
 	return &server
 }
@@ -106,6 +105,7 @@ func (s *Server) PushValue(pushEvent *PushEvent, clientPushResp *ClientPushResp)
 	key_uint64, _ := strconv.ParseUint(pushEvent.Key, 10, 64)
 
 	preferenceList, _ := s.nodeManager.GetPreferenceList(key_uint64, s.numReplica)
+	log.Printf("pereference list for key %s is %v", pushEvent.Key, preferenceList)
 	reply_list := []bool{}
 	for _, port := range preferenceList{
 		client, err := rpc.DialHTTP("tcp", ":"+strconv.Itoa(int(port)))
@@ -118,9 +118,10 @@ func (s *Server) PushValue(pushEvent *PushEvent, clientPushResp *ClientPushResp)
 		err = client.Call("Server.PutReplica", pushEvent, &reply)
 		if err != nil {
 			log.Fatal("Server.GetValue error:", err)
-		reply_list = append(reply_list, reply.Success)
 		}
+		reply_list = append(reply_list, reply.Success)
 	}
+
 	clientPushResp.Success = reply_list
 
 	return nil
